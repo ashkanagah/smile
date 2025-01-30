@@ -14,67 +14,67 @@ jobs:
 
     steps:
     # 1. Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     # 2. Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
 
     # 3. Install dependencies (Cython, Buildozer, etc.)
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
-          pip install --upgrade pip
-          pip install cython
-          pip install buildozer
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
+        pip install --upgrade pip
+        pip install cython
+        pip install buildozer
 
     # 4. Install Android SDK Command-line tools
-      - name: Install Android SDK Command-line tools
-        run: |
-          mkdir -p $HOME/Android/Sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip
-          unzip commandlinetools-linux-7302050_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
-          mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+    - name: Install Android SDK Command-line tools
+      run: |
+        mkdir -p $HOME/Android/Sdk/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip
+        unzip commandlinetools-linux-7302050_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
+        mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
 
     # 5. Install Android SDK components (including AIDL)
-      - name: Install Android SDK components (including AIDL)
-        run: |
-          echo "y" | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
-          $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
-          # Install AIDL (specific package related to AIDL)
-          $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
+    - name: Install Android SDK components (including AIDL)
+      run: |
+        echo "y" | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
+        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
+        # Explicitly install AIDL if needed
+        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.2"
 
     # 6. Set up Android SDK environment variables
-      - name: Set up Android SDK path
-        run: |
-          echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
+    - name: Set up Android SDK path
+      run: |
+        echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
 
     # 7. Clean previous builds (optional but useful to avoid conflicts)
-      - name: Clean previous builds
-        run: |
-          rm -rf .buildozer
-          rm -rf build
-          rm -rf dist
+    - name: Clean previous builds
+      run: |
+        rm -rf .buildozer
+        rm -rf build
+        rm -rf dist
 
     # 8. Verify SDK installation
-      - name: Verify SDK installation
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          sdkmanager --list
+    - name: Verify SDK installation
+      run: |
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        sdkmanager --list
 
     # 9. Build APK
-      - name: Build APK
-        run: |
-          buildozer android debug
+    - name: Build APK
+      run: |
+        buildozer android debug
 
     # 10. Upload APK to GitHub
-      - name: Upload APK to GitHub
-        uses: actions/upload-artifact@v4
-        with:
-          name: mykiwiapp.apk
-          path: ./bin/*.apk
+    - name: Upload APK to GitHub
+      uses: actions/upload-artifact@v4
+      with:
+        name: mykiwiapp.apk
+        path: ./bin/*.apk
