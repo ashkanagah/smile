@@ -25,12 +25,15 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y make gcc g++ python3-dev libgl1
-        sudo apt-get install -y wget unzip openjdk-8-jdk
-        sudo apt-get install -y android-sdk
         pip install --upgrade pip
         pip install cython
         pip install buildozer
-        sudo apt-get install -y lib32z1 lib32ncurses6 lib32stdc++6
+
+    - name: Install Android SDK
+      run: |
+        sudo apt-get install -y android-sdk
+        sdkmanager --update
+        sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2"
          
     - name: Build APK
       run: |
