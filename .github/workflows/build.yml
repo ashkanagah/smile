@@ -13,39 +13,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # 2. Set up Python
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.8'
 
+    # 3. Install dependencies (Cython, Buildozer, etc.)
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y make gcc g++ python3-dev libgl1
+        sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
         pip install --upgrade pip
         pip install cython
         pip install buildozer
 
-    - name: Install Android SDK
+    # 4. Install Android SDK Command-line tools (instead of full android-sdk)
+    - name: Install Android SDK Command-line tools
       run: |
-        sudo apt-get install -y android-sdk
-        echo "y" | sdkmanager --update
-        sdkmanager --list
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip
+        unzip commandlinetools-linux-7302050_latest.zip
+        sudo mv cmdline-tools $HOME/Android/Sdk/
+        echo "y" | $HOME/Android/Sdk/cmdline-tools/bin/sdkmanager --update
         sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2"
 
-      # 5. Set up Android SDK environment variables
+    # 5. Set up Android SDK environment variables
     - name: Set up Android SDK path
       run: |
         echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
         echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/bin" >> $GITHUB_ENV
-         
+
+    # 6. Clean previous builds (optional but useful to avoid conflicts)
+    - name: Clean previous builds
+      run: |
+        rm -rf .buildozer
+        rm -rf build
+        rm -rf dist
+
+    # 7. Verify SDK installation
+    - name: Verify SDK installation
+      run: |
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        sdkmanager --list
+
+    # 8. Build APK
     - name: Build APK
       run: |
         buildozer android debug
 
+    # 9. Upload APK to GitHub
     - name: Upload APK to GitHub
       uses: actions/upload-artifact@v4
       with:
