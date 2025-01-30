@@ -35,17 +35,40 @@ jobs:
     # 4. Install Android SDK Command-line tools (instead of full android-sdk)
     - name: Install Android SDK Command-line tools
       run: |
-        mkdir -p $HOME/Android/Sdk
+        mkdir -p $HOME/Android/Sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip
-        unzip commandlinetools-linux-7302050_latest.zip
-        sudo mv cmdline-tools $HOME/Android/Sdk/
-        echo "y" | $HOME/Android/Sdk/cmdline-tools/bin/sdkmanager --update
+        unzip commandlinetools-linux-7302050_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
+        mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
+        echo "y" | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
         sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2"
 
     # 5. Set up Android SDK environment variables
     - name: Set up Android SDK path
       run: |
         echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/bin" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
 
-    # 6. Clean previous builds (optional
+    # 6. Clean previous builds (optional but useful to avoid conflicts)
+    - name: Clean previous builds
+      run: |
+        rm -rf .buildozer
+        rm -rf build
+        rm -rf dist
+
+    # 7. Verify SDK installation
+    - name: Verify SDK installation
+      run: |
+        echo "ANDROID_HOME=$ANDROID_HOME"
+        sdkmanager --list
+
+    # 8. Build APK
+    - name: Build APK
+      run: |
+        buildozer android debug
+
+    # 9. Upload APK to GitHub
+    - name: Upload APK to GitHub
+      uses: actions/upload-artifact@v4
+      with:
+        name: mykiwiapp.apk
+        path: ./bin/*.apk
