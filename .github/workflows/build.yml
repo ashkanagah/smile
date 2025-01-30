@@ -44,6 +44,7 @@ jobs:
     - name: Install Android SDK components (including AIDL)
       run: |
         echo "y" | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
+        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
         # Explicitly install AIDL if needed
         $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.2"
