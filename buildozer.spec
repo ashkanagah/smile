@@ -1,7 +1,7 @@
 [app]
 title:smiledetector
-pakage.name = smiledetect
-pakage.domain = org.example
+package.name = smiledetector
+package.domain = org.example
 version = 1.0
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
