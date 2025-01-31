@@ -44,8 +44,21 @@ jobs:
           exit 1
         fi
 
+    - name: Fix AIDL path for Buildozer
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/build-tools/30.0.3
+        cp -r $HOME/Android/Sdk/build-tools/30.0.3/* $HOME/.buildozer/android/platform/android-sdk/build-tools/30.0.3
+        echo "✅ مسیر `aidl` اصلاح شد!"
+
+    - name: Debug AIDL path
+      run: |
+        echo "🔍 چک کردن مسیر `aidl`"
+        find $HOME/.buildozer/android/platform/android-sdk/build-tools -name "aidl" || echo "❌ aidl پیدا نشد!"
+
     - name: Build APK
-      run: buildozer android debug
+      run: |
+        export PATH=$HOME/.buildozer/android/platform/android-sdk/build-tools/30.0.3:$PATH
+        buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
