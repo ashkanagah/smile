@@ -7,7 +7,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 
 android.sdk_path = /home/runner/Android/Sdk
-android.ndk_path = /home/runnner/.buildozer/android/platform/android-ndk-r25b
+android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25b
 android.api = 31
 android.minapi = 21
 android.accept_sdk_license = True
