@@ -1,10 +1,7 @@
-name: Build and Deploy APK
+name: Build APK
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -13,68 +10,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Set up Python
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-
-    # 3. Install dependencies (Cython, Buildozer, etc.)
-    - name: Install dependencies
+    - name: Set up Python & Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
         pip install --upgrade pip
-        pip install cython
-        pip install buildozer
+        pip install cython buildozer
 
-    # 4. Install Android SDK Command-line tools
-    - name: Install Android SDK Command-line tools
+    - name: Install Android SDK & AIDL
       run: |
         mkdir -p $HOME/Android/Sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip
-        unzip commandlinetools-linux-7302050_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+        unzip -q commandlinetools-linux-10406996_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
         mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
-
-    # 5. Accept licenses and install SDK components (including AIDL)
-    - name: Install Android SDK components and accept licenses
-      run: |
-        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
         yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
-        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" "tools" "extras;android;m2repository"
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
 
-    # 6. Set up Android SDK environment variables
-    - name: Set up Android SDK path
+    - name: Set up Android SDK paths
       run: |
         echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$HOME/Android/Sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/build-tools/30.0.3" >> $GITHUB_ENV
 
-    # 7. Clean previous builds (optional but useful to avoid conflicts)
-    - name: Clean previous builds
+    - name: Check if AIDL exists
       run: |
-        rm -rf .buildozer
-        rm -rf build
-        rm -rf dist
+        ls -la $HOME/Android/Sdk/build-tools/30.0.3/
+        if [ -f "$HOME/Android/Sdk/build-tools/30.0.3/aidl" ]; then
+          echo "AIDL installed successfully"
+        else
+          echo "AIDL still missing! Exiting..."
+          exit 1
+        fi
 
-    # 8. Verify SDK installation
-    - name: Verify SDK installation
-      run: |
-        echo "ANDROID_HOME=$ANDROID_HOME"
-        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --list
-
-    # 9. Build APK
     - name: Build APK
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
-    # 10. Upload APK to GitHub
-    - name: Upload APK to GitHub
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: mykiwiapp.apk
+        name: MyApp.apk
         path: ./bin/*.apk
