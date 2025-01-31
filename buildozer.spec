@@ -6,13 +6,12 @@ version = 1.0
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 
-android.sdk_path = /home/runner/Android/Sdk
-android.ndk_path = /home/runner/.buildozer/android/platform/android-ndk-r25b
+android.sdk_path =
+android.ndk_path = 
 android.api = 31
 android.minapi = 21
 android.accept_sdk_license = True
 android.skip_update = False
-
 
 requirements = python3,kivy
 orientation = portrait
