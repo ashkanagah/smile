@@ -1,10 +1,7 @@
-name: Build and Deploy APK
+name: Build APK
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -16,38 +13,53 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-
-    - name: Install dependencies
+    - name: Set up Python & Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y make gcc g++ python3-dev libgl1
+        sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
         pip install --upgrade pip
-        pip install cython
-        pip install buildozer
+        pip install cython buildozer
 
-    - name: Install Android SDK
+    - name: Install Android SDK & Accept Licenses
       run: |
-        sudo apt-get install -y android-sdk
-        echo "y" | sdkmanager --update
-        sdkmanager --list
-        sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2"
+        # تنظیم مسیر SDK
+        export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
 
-    - name: Set up Android SDK path
-      run: |
-        echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/bin" >> $GITHUB_ENV
+        # دانلود ابزارهای خط فرمان Android SDK
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/
+        mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
 
-    - name: Build APK  # **اینجا مرحله ساخت را اضافه کردیم**
+        # تنظیم متغیرهای محیطی
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+        echo "PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_ENV
+
+        # پذیرش لایسنس‌ها و نصب ابزارهای مورد نیاز
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
+        echo "✅ Android SDK نصب شد!"
+
+    - name: Verify sdkmanager installation
       run: |
-        buildozer init
+        if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+          echo "✅ sdkmanager نصب شده است."
+        else
+          echo "❌ sdkmanager پیدا نشد! لطفاً خطا را بررسی کنید."
+          exit 1
+        fi
+
+    - name: Install Build Tools & AIDL
+      run: |
+        echo "Installing build tools and AIDL..."
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;30.0.3" "platform-tools" "platforms;android-31"
+
+    - name: Build APK
+      run: |
         buildozer android debug
 
-    - name: Upload APK  # **مرحله آپلود APK در GitHub**
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: MyApp
-        path: bin/*.apk
+        name: MyApp.apk
+        path: ./bin/*.apk
