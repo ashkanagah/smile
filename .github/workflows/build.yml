@@ -26,23 +26,28 @@ jobs:
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
         unzip -q commandlinetools-linux-10406996_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
         mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
-        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
+        echo "✅ Android SDK نصب شد!"
 
     - name: Set up Android SDK paths
       run: |
         echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$HOME/Android/Sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/build-tools/30.0.3" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/Android/Sdk/platform-tools:$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
 
-    - name: Verify AIDL installation
+    - name: Verify sdkmanager installation
       run: |
-        if [ -f "$HOME/Android/Sdk/build-tools/30.0.3/aidl" ]; then
-          echo "✅ AIDL نصب شده است."
+        if [ -f "$HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
+          echo "✅ sdkmanager نصب شده است."
         else
-          echo "❌ AIDL نصب نشد! لطفاً خطا را بررسی کنید."
+          echo "❌ sdkmanager پیدا نشد! لطفاً خطا را بررسی کنید."
           exit 1
         fi
+
+    - name: Install Build Tools & AIDL
+      run: |
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
+        echo "✅ ابزارهای موردنیاز نصب شدند!"
 
     - name: Fix AIDL path for Buildozer
       run: |
@@ -50,18 +55,7 @@ jobs:
         cp -r $HOME/Android/Sdk/build-tools/30.0.3/* $HOME/.buildozer/android/platform/android-sdk/build-tools/30.0.3
         echo "✅ مسیر `aidl` اصلاح شد!"
 
-    - name: Debug AIDL path
-      run: |
-        echo "🔍 چک کردن مسیر `aidl`"
-        find $HOME/.buildozer/android/platform/android-sdk/build-tools -name "aidl" || echo "❌ aidl پیدا نشد!"
-
     - name: Build APK
       run: |
         export PATH=$HOME/.buildozer/android/platform/android-sdk/build-tools/30.0.3:$PATH
         buildozer android debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: MyApp.apk
-        path: ./bin/*.apk
