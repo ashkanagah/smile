@@ -40,14 +40,13 @@ jobs:
         unzip commandlinetools-linux-7302050_latest.zip -d $HOME/Android/Sdk/cmdline-tools/
         mv $HOME/Android/Sdk/cmdline-tools/cmdline-tools $HOME/Android/Sdk/cmdline-tools/latest
 
-    # 5. Install Android SDK components (including AIDL)
-    - name: Install Android SDK components (including AIDL)
+    # 5. Accept licenses and install SDK components (including AIDL)
+    - name: Install Android SDK components and accept licenses
       run: |
-        echo "y" | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
-        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
-        # Explicitly install AIDL if needed
-        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.2"
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.2" "tools" "extras;android;m2repository" "extras;google;m2repository"
+        yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" "tools" "extras;android;m2repository"
 
     # 6. Set up Android SDK environment variables
     - name: Set up Android SDK path
@@ -66,7 +65,7 @@ jobs:
     - name: Verify SDK installation
       run: |
         echo "ANDROID_HOME=$ANDROID_HOME"
-        sdkmanager --list
+        $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --list
 
     # 9. Build APK
     - name: Build APK
