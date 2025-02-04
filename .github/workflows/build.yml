@@ -47,7 +47,7 @@ jobs:
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O android-sdk.zip
           unzip -q android-sdk.zip -d $HOME/Android/Sdk/cmdline-tools
           mkdir -p $HOME/Android/Sdk/cmdline-tools/latest
-          mv $HOME/Android/Sdk/cmdline-tools/* $HOME/Android/Sdk/cmdline-tools/latest
+          mv $HOME/Android/Sdk/cmdline-tools/* $HOME/Android/Sdk/cmdline-tools/latest/
           yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
           $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
           $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "ndk;21.3.6528147"
