@@ -16,11 +16,22 @@ jobs:
     - name: Set up Python & Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y autoconf 
-        sudo apt-get install -y libtool
+        sudo apt-get install -y autoconf libtool m4
+        libtoolize --force
+        autoreconf --force --install
         sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
         pip install --upgrade pip
         pip install cython buildozer
+        echo "dependencies installed and confiqured."
+
+    - name: Clean buildozer cache
+      run: |
+        rm -rf ~/.buildozer
+
+    - name: Set enviroment variables
+      run: |
+        echo "M4_PATTERN_ALLOW=LT_SYS_SYMBOL_USCORE" >> $GITHUB_ENV
+    
     - name: Build APK
       run: |
         buildozer android debug
