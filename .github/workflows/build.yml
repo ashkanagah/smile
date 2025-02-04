@@ -63,12 +63,12 @@ jobs:
       run: |
         echo 'm4_pattern_allow([^LT_SYS_SYMBOL_USCORE$])' >> configure.ac
 
+    - name: Debug Biuldozer 
+      run: buildozer android debug --verbose
+
     - name: Clean buildozer cache
       run: |
         rm -rf ~/.buildozer
-
-    - name: Debug Biuldozer 
-      run: buildozer android debug --verbose
     
     - name: Build APK
       run: |
