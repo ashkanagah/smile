@@ -4,61 +4,53 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      # Check out the repository
+      - name: Check out repository
+        uses: actions/checkout@v2
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      # Set up Python
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.10"
+          python-version: '3.x'
 
-      - name: Install Dependencies
+      # Install dependencies
+      - name: Install dependencies
         run: |
-          sudo apt update && sudo apt upgrade -y
-          sudo apt install -y python3 python3-pip python3-venv \
-              autoconf automake libtool build-essential \
-              libffi-dev libssl-dev libltdl-dev pkg-config \
-              git zip unzip openjdk-17-jdk
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            build-essential \
+            python3-dev \
+            openjdk-8-jdk \
+            unzip \
+            zip
 
-      - name: Setup Virtual Environment
+      # Install Buildozer
+      - name: Install Buildozer
         run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip setuptools wheel
-          pip install buildozer
+          python3 -m pip install --upgrade pip
+          python3 -m pip install buildozer
 
-      - name: Fix Autoconf Issues
+      # Install Android SDK and NDK
+      - name: Install Android SDK & NDK
         run: |
-          rm -rf autom4te.cache
-          touch NEWS README AUTHORS ChangeLog
-          autoreconf -vfi
+          mkdir -p $HOME/Android/Sdk
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O android-sdk.zip
+          unzip -q android-sdk.zip -d $HOME/Android/Sdk
+          yes | $HOME/Android/Sdk/cmdline-tools/bin/sdkmanager --licenses
+          $HOME/Android/Sdk/cmdline-tools/bin/sdkmanager --update
+          $HOME/Android/Sdk/cmdline-tools/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "ndk;21.3.6528147"
 
-      - name: Setup Buildozer
-        run: |
-          buildozer init
-          sed -i 's|^android.accept_sdk_license = False|android.accept_sdk_license = True|' buildozer.spec
-          sed -i 's|^android.skip_update = True|android.skip_update = False|' buildozer.spec
-
-      - name: Clean Previous Builds
-        run: |
-          rm -rf ~/.buildozer
-          buildozer android clean
-
+      # Build APK using Buildozer
       - name: Build APK
         run: |
-          buildozer -v android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmileDetector-APK
-          path: bin/*.apk
+          buildozer android debug
