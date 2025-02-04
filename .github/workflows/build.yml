@@ -5,7 +5,7 @@ on:
     branches:
       - main
 
-job:
+jobs:
   build:
     runs-on: ubuntu-latest
 
@@ -36,7 +36,7 @@ job:
       run: |
         libtoolize --force --copy --automake
 
-    - name: Set enviroment variables
+    - name: Set environment variables
       run: |
         echo "ANDROIDSDK=$HOME/ANDROID/Sdk" >> $GITHUB_ENV
         echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
@@ -46,8 +46,8 @@ job:
       run: |
         autoupdate
 
-   - name: Run autoreconf
-     run: |
+    - name: Run autoreconf
+      run: |
        autoreconf --force --install
       
     - name: Check configure.ac File
@@ -63,7 +63,7 @@ job:
       run: |
         echo 'm4_pattern_allow([^LT_SYS_SYMBOL_USCORE$])' >> configure.ac
 
-    - name: Debug Biuldozer 
+    - name: Debug Buildozer 
       run: buildozer android debug --verbose
 
     - name: Clean buildozer cache
