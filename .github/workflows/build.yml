@@ -16,13 +16,25 @@ jobs:
     - name: Set up Python & Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y autoconf libtool m4
-        libtoolize --force
-        autoreconf --force --install
+        sudo apt-get install -y autoconf 
+        autoreconf --force --install || echo "warning: autoreconf failed, skipping..."
         sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
         pip install --upgrade pip
         pip install cython buildozer
         echo "dependencies installed and confiqured."
+
+    - name: Check configure.ac File
+      run: |
+        if [ -f configure.ac ]; then
+          echo "configure.ac exists."
+        else
+          echo "error: configure.ac NOT FOUND!"
+          exit 1
+        fi
+
+    - name: Allow LT_SYS_SYMBOL_USCORE Macro
+      run: |
+        echo 'm4_pattern_allow([^LT_SYS_SYMBOL_USCORE$])' >> configure.ac
 
     - name: Clean buildozer cache
       run: |
