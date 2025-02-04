@@ -16,63 +16,43 @@ jobs:
     - name: Set up Python & Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y autoconf 
-        autoreconf --force --install || echo "warning: autoreconf failed, skipping..."
         sudo apt-get install -y make gcc g++ python3-dev libgl1 wget unzip
         pip install --upgrade pip
         pip install cython buildozer
-        echo "dependencies installed and confiqured."
 
-    - name: Check Project Files
-      run: ls -la
+    - name: Set up Android SDK & NDK
+      run: |
+        export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
 
-    - name: Install Missing Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y autoconf automake pkg-config
-        sudo apt-get install -y autoconf automake libtool
+        # دانلود ابزارهای SDK
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+        unzip -q commandlinetools-linux-10406996_latest.zip -d $ANDROID_SDK_ROOT/cmdline-tools/
+        mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
 
-    - name: Run libtoolize
-      run: |
-        libtoolize --force --copy --automake
+        # تنظیم مسیرهای SDK در محیط
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+        echo "ANDROID_NDK=$HOME/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
+        echo "PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_ENV
 
-    - name: Set environment variables
+        # پذیرش لایسنس‌ها و نصب ابزارهای موردنیاز
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
+
+    - name: Verify SDK installation
       run: |
-        echo "ANDROIDSDK=$HOME/ANDROID/Sdk" >> $GITHUB_ENV
-        echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
-        echo "M4_PATTERN_ALLOW=LT_SYS_SYMBOL_USCORE" >> $GITHUB_ENV
-      
-    - name: Check configure.ac File
-      run: |
-        if [ -f configure.ac ]; then
-          echo "configure.ac exists."
+        if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+          echo "✅ sdkmanager نصب شده است."
         else
-          echo "error: configure.ac NOT FOUND!"
+          echo "❌ sdkmanager پیدا نشد! لطفاً خطا را بررسی کنید."
           exit 1
         fi
 
-    - name: Allow LT_SYS_SYMBOL_USCORE Macro
-      run: |
-        echo 'm4_pattern_allow([^LT_SYS_SYMBOL_USCORE$])' >> configure.ac
+    - name: Clean old buildozer cache
+      run: rm -rf ~/.buildozer
 
-    - name: Run autoupdate
-      run: |
-        autoupdate
-
-    - name: Run autoreconf
-      run: |
-       autoreconf --force --install
-
-    - name: Debug Buildozer 
-      run: buildozer android debug --verbose
-
-    - name: Clean buildozer cache
-      run: |
-        rm -rf ~/.buildozer
-    
     - name: Build APK
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
