@@ -23,6 +23,17 @@ jobs:
         pip install cython buildozer
         echo "dependencies installed and confiqured."
 
+    - name: Check Project Files
+      run: ls -la
+
+    - name: Install Missing Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y autoconf automake pkg-config
+
+    - name: Debug Biuldozer 
+      run: buildozer android debug --verbose
+      
     - name: Check configure.ac File
       run: |
         if [ -f configure.ac ]; then
