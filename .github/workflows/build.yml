@@ -30,6 +30,17 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y autoconf automake pkg-config
+        sudo apt-get install -y autoconf automake libtool
+
+    - name: Run libtoolize
+      run: |
+        libtoolize --force --copy --automake
+
+    - name: Set enviroment variables
+      run: |
+        echo "ANDROIDSDK=$HOME/ANDROID/Sdk" >> $GITHUB_ENV
+        echo "ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b" >> $GITHUB_ENV
+        echo "M4_PATTERN_ALLOW=LT_SYS_SYMBOL_USCORE" >> $GITHUB_ENV
 
     - name: Debug Biuldozer 
       run: buildozer android debug --verbose
@@ -50,10 +61,6 @@ jobs:
     - name: Clean buildozer cache
       run: |
         rm -rf ~/.buildozer
-
-    - name: Set enviroment variables
-      run: |
-        echo "M4_PATTERN_ALLOW=LT_SYS_SYMBOL_USCORE" >> $GITHUB_ENV
     
     - name: Build APK
       run: |
