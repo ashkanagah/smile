@@ -36,10 +36,11 @@ jobs:
           pip install --upgrade pip setuptools wheel
           pip install buildozer
 
-      - name: Run Autoconf Fixes
+      - name: Fix Autoconf Issues
         run: |
-          autoupdate
-          autoreconf -fi
+          rm -rf autom4te.cache
+          touch NEWS README AUTHORS ChangeLog
+          autoreconf -vfi
 
       - name: Setup Buildozer
         run: |
