@@ -34,6 +34,7 @@ jobs:
       - name: Install Buildozer
         run: |
           python3 -m pip install --upgrade pip
+          python3 -m pip install cython
           python3 -m pip install buildozer
 
       - name: Install Android SDK & NDK
