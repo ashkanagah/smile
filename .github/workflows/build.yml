@@ -7,57 +7,41 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Python 3.10 (Stable)
-        uses: actions/setup-python@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade Cython
+          pip install --upgrade buildozer
+          pip install --upgrade python-for-android
           sudo apt-get update
-          sudo apt-get install -y \
-            autoconf \
-            automake \
-            libtool \
-            build-essential \
-            python3.10-dev \
-            openjdk-8-jdk \
-            unzip \
-            zip
+          sudo apt-get install -y python3-distutils
 
-      - name: Install Buildozer
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install cython
-          python3 -m pip install buildozer
-
-      - name: Install Android SDK & NDK
+      - name: Set up Android SDK
         run: |
           export ANDROID_HOME=$HOME/Android/Sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O android-sdk.zip
-          unzip -q android-sdk.zip -d $ANDROID_HOME/cmdline-tools
-
-          if [ ! -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]; then
-            mkdir -p $ANDROID_HOME/cmdline-tools/latest
-            mv $ANDROID_HOME/cmdline-tools/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
-            rm -rf $ANDROID_HOME/cmdline-tools/cmdline-tools
+      - name: Fix cmdline-tools path
+        run: |
+          if [ -d "$ANDROID_HOME/cmdline-tools/latest/latest" ]; then
+            mv "$ANDROID_HOME/cmdline-tools/latest/latest" "$ANDROID_HOME/cmdline-tools/latest-temp"
+            rm -rf "$ANDROID_HOME/cmdline-tools/latest"
+            mv "$ANDROID_HOME/cmdline-tools/latest-temp" "$ANDROID_HOME/cmdline-tools/latest"
           fi
 
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --update
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "ndk;21.3.6528147"
+      - name: Initialize Buildozer
+        run: buildozer init
 
       - name: Build APK
-        run: |
-          export ANDROID_HOME=$HOME/Android/Sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          buildozer android debug
+        run: buildozer android debug --quiet
