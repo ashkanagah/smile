@@ -40,8 +40,5 @@ jobs:
             mv "$ANDROID_HOME/cmdline-tools/latest-temp" "$ANDROID_HOME/cmdline-tools/latest"
           fi
 
-      - name: Initialize Buildozer
-        run: buildozer init
-
       - name: Build APK
         run: buildozer android debug --quiet
