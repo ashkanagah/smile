@@ -10,17 +10,14 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # Check out the repository
       - name: Check out repository
         uses: actions/checkout@v2
 
-      # Set up Python
       - name: Set up Python 3.x
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
-      # Install dependencies
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -34,25 +31,32 @@ jobs:
             unzip \
             zip
 
-      # Install Buildozer
       - name: Install Buildozer
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install buildozer
 
-      # Install Android SDK & NDK
       - name: Install Android SDK & NDK
         run: |
-          mkdir -p $HOME/Android/Sdk
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O android-sdk.zip
-          unzip -q android-sdk.zip -d $HOME/Android/Sdk/cmdline-tools
-          mkdir -p $HOME/Android/Sdk/cmdline-tools/latest
-          mv $HOME/Android/Sdk/cmdline-tools/* $HOME/Android/Sdk/cmdline-tools/latest/
-          yes | $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-          $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --update
-          $HOME/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "ndk;21.3.6528147"
+          export ANDROID_HOME=$HOME/Android/Sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-      # Build APK using Buildozer
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O android-sdk.zip
+          unzip -q android-sdk.zip -d $ANDROID_HOME/cmdline-tools
+
+          if [ ! -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]; then
+            mkdir -p $ANDROID_HOME/cmdline-tools/latest
+            mv $ANDROID_HOME/cmdline-tools/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+            rm -rf $ANDROID_HOME/cmdline-tools/cmdline-tools
+          fi
+
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --update
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "ndk;21.3.6528147"
+
       - name: Build APK
         run: |
+          export ANDROID_HOME=$HOME/Android/Sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           buildozer android debug
